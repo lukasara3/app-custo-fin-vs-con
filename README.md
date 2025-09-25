@@ -39,6 +39,8 @@ Siga os passos abaixo para rodar a aplicação em sua máquina local.
     python3 -m venv .venv
     source .venv/bin/activate
     ```
+    Ativar o venv: source .venv/bin/activate
+    Desativar o venv: deactivate
 
 3.  **Instale as Dependências**
     Com o ambiente virtual ativado, instale todas as bibliotecas necessárias:
@@ -52,8 +54,18 @@ Siga os passos abaixo para rodar a aplicação em sua máquina local.
     ```
     Após executar o comando acima, a aplicação será aberta automaticamente no seu navegador.
 
-## 4. Estrutura do Projeto
+## 4. Como Rodar os Testes
+
+Este projeto utiliza `pytest` para garantir a corretude dos cálculos financeiros. Para executar a suíte de testes, certifique-se de que o ambiente virtual está ativado e rode o seguinte comando na pasta raiz do projeto:
+
+```bash
+pytest
+```
+Você verá o resultado dos testes no terminal. Todos os testes devem passar para garantir que a lógica de cálculo está funcionando como esperado.
+
+## 5. Estrutura do Projeto
 
 - **/core:** Contém toda a lógica de negócio (cálculos financeiros, busca de dados, análises).
 - **/tests:** Contém os testes unitários para garantir a corretude dos cálculos.
 - **app.py:** Arquivo principal que define a interface do usuário e orquestra a aplicação.
+- **pytest.ini:** Arquivo de configuração para o Pytest.

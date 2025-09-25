@@ -1,0 +1,15 @@
+# Ambientes virtuais
+.venv/
+venv/
+
+# Caches do Python
+__pycache__/
+*.pyc
+
+# Caches de ferramentas de teste
+.pytest_cache/
+.coverage
+
+# Caches de IDEs (opcional, mas recomendado)
+.idea/
+.vscode/

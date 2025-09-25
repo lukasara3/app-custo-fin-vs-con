@@ -1,0 +1,16 @@
+# Core Framework
+streamlit
+
+# Data Handling & Financial Calculations
+pandas
+numpy-financial
+
+# Data Fetching
+requests
+
+# Plotting
+plotly
+matplotlib
+
+# Testing
+pytest

@@ -3,6 +3,7 @@ import pandas as pd
 from core.calculations import *
 from core.data_fetcher import busca_taxa_selic_atual
 from core.analysis import *
+from core.plotting import plot_custo_total_bar_chart, plot_scenario_analysis_bar_chart
 
 # --- Configuração da Página ---
 st.set_page_config(page_title="Calculadora Estratégica", page_icon="💰", layout="wide")
@@ -10,7 +11,7 @@ st.set_page_config(page_title="Calculadora Estratégica", page_icon="💰", layo
 st.title("Calculadora Estratégica: Financiamento vs. Consórcio")
 st.markdown("Uma ferramenta para análise do custo efetivo de aquisição de bens, baseada no Valor do Dinheiro no Tempo.")
 
-# MUDANÇA: Inicializa o session_state para guardar a "memória" da aplicação
+# Inicializa o session_state para guardar a "memória" da aplicação
 if 'analysis_run' not in st.session_state:
     st.session_state.analysis_run = False
     st.session_state.params = {}
@@ -39,7 +40,6 @@ if st.sidebar.button("Analisar", type="primary", use_container_width=True):
         st.error("O valor da entrada não pode ser maior ou igual ao valor do bem.")
         st.session_state.analysis_run = False
     else:
-        # MUDANÇA: Salva os parâmetros e o status na "memória" da sessão
         st.session_state.analysis_run = True
         st.session_state.params = {
             'valor_bem': valor_bem, 'valor_entrada': valor_entrada,
@@ -48,26 +48,19 @@ if st.sidebar.button("Analisar", type="primary", use_container_width=True):
             'taxa_adm_total': taxa_adm_total, 'fundo_reserva_total': fundo_reserva_total
         }
 
-# MUDANÇA: Todo o código de exibição agora fica aqui, e só roda se a análise foi iniciada
+# --- Lógica de Exibição (só roda se a análise foi iniciada) ---
 if st.session_state.analysis_run:
-    # Recupera os parâmetros da "memória"
     params = st.session_state.params
-
-    # Executa os cálculos principais usando os parâmetros salvos
     valor_a_financiar = params['valor_bem'] - params['valor_entrada']
     parcela_fin = calcula_parcela_price(valor_a_financiar, params['taxa_juros_anual_fin'], params['prazo_meses_fin'])
     parcela_con = calcula_parcela_consorcio(params['valor_bem'], params['prazo_meses_con'], params['taxa_adm_total'], params['fundo_reserva_total'])
-    
-    # Adiciona os valores calculados ao dicionário para uso nas abas
-    params['valor_a_financiar'] = valor_a_financiar
-    params['parcela_fin'] = parcela_fin
-    params['parcela_con'] = parcela_con
-    params['carta_credito'] = params['valor_bem']
+    params.update({
+        'valor_a_financiar': valor_a_financiar, 'parcela_fin': parcela_fin,
+        'parcela_con': parcela_con, 'carta_credito': params['valor_bem']
+    })
 
-    # --- Organiza a UI com 3 Abas ---
     tab1, tab2, tab3 = st.tabs(["📊 Resultado Principal", "📈 Análise de Cenários", "🎯 Estratégias de Consórcio"])
 
-    # --- Aba 1: Resultado Principal (Cenário Realista) ---
     with tab1:
         custo_vp_fin = calcula_vp_custo_financiamento(params['valor_entrada'], params['valor_a_financiar'], params['taxa_juros_anual_fin'], params['prazo_meses_fin'], params['taxa_selic_anual'])
         custo_vp_con = calcula_vp_custo_consorcio(params['parcela_con'], params['prazo_meses_con'], params['taxa_selic_anual'])
@@ -87,26 +80,29 @@ if st.session_state.analysis_run:
             st.metric(label="Parcela Mensal Média", value=f"R$ {parcela_con:,.2f}")
             st.info("Cálculo do VP considera a contemplação no final do plano (pior cenário).")
         
+        st.subheader("Gráfico Comparativo de Custos")
+        fig_comparativo = plot_custo_total_bar_chart(custo_vp_fin, abs(custo_vp_con))
+        st.plotly_chart(fig_comparativo, use_container_width=True)
+
         diferenca_vp = abs(custo_vp_fin - abs(custo_vp_con))
         if custo_vp_fin < abs(custo_vp_con):
             st.success(f"**Conclusão:** No cenário realista, o **Financiamento** parece ser mais vantajoso por uma diferença de R$ {diferenca_vp:,.2f} em valor presente.")
         else:
             st.info(f"**Conclusão:** No cenário realista, o **Consórcio** parece ser mais vantajoso por uma diferença de R$ {diferenca_vp:,.2f} em valor presente.")
 
-    # --- Aba 2: Análise de Cenários ---
     with tab2:
         st.header("Análise de Sensibilidade à Taxa de Oportunidade (Selic)")
         st.markdown("Esta análise mostra como a decisão pode mudar se a taxa de juros da economia (Selic) variar.")
         df_cenarios = run_scenario_analysis(params)
         st.table(df_cenarios)
+        st.subheader("Gráfico Comparativo dos Cenários")
+        fig_cenarios = plot_scenario_analysis_bar_chart(df_cenarios)
+        st.plotly_chart(fig_cenarios, use_container_width=True)
 
-    # --- Aba 3: Estratégias de Consórcio ---
     with tab3:
         st.header("Simulador de Estratégias para o Consórcio")
         st.info("Explore cenários alternativos para sua carta de consórcio, tratando-a como um ativo financeiro.")
-
         col1, col2, col3 = st.columns(3)
-
         with col1:
             st.subheader("Estratégia de Lance")
             lance_perc = st.slider("Lance Ofertado (% da carta)", 0, 100, 25, key="lance_perc")
@@ -114,7 +110,6 @@ if st.session_state.analysis_run:
                 resultado = simular_estrategia_lance(params['parcela_con'], params['prazo_meses_con'], params['carta_credito'], lance_perc, params['taxa_selic_anual'])
                 st.metric("Novo Custo em VP (com lance)", f"R$ {resultado['custo_vp']:,.2f}")
                 st.write(f"Prazo efetivo reduzido para ~{resultado['novo_prazo']} meses.")
-
         with col2:
             st.subheader("Estratégia de Venda")
             mes_contemplacao_venda = st.slider("Mês da Contemplação (p/ Venda)", 1, params['prazo_meses_con'], int(params['prazo_meses_con']/2), key="mes_venda")
@@ -123,7 +118,6 @@ if st.session_state.analysis_run:
                 resultado = simular_estrategia_venda(params['parcela_con'], mes_contemplacao_venda, agio_venda, params['taxa_selic_anual'])
                 st.metric("VPL da Operação", f"R$ {resultado['vpl']:,.2f}")
                 st.metric("TIR Anualizada", f"{resultado['tir_anual']:.2%}")
-
         with col3:
             st.subheader("Estratégia de Aluguel")
             mes_contemplacao_aluguel = st.slider("Mês da Contemplação (p/ Aluguel)", 1, params['prazo_meses_con'], int(params['prazo_meses_con']/4), key="mes_aluguel")

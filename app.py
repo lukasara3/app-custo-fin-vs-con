@@ -18,21 +18,27 @@ if 'analysis_run' not in st.session_state:
 
 # --- Barra Lateral para Inputs do Usuário ---
 st.sidebar.header("Parâmetros de Entrada")
+
+# PARÂMETRO GLOBAL - Taxa de Oportunidade (Selic)
 selic_atual = busca_taxa_selic_atual()
 taxa_selic_anual = st.sidebar.slider(
     "Taxa de Oportunidade (Selic Anual %)", 
     min_value=1.0, max_value=20.0, value=selic_atual * 100, step=0.25
 ) / 100
 st.sidebar.caption(f"Taxa Selic Meta atual detectada: {selic_atual*100:.2f}% a.a.")
-valor_bem = st.sidebar.number_input("Valor do Bem (R$)", min_value=1000, value=300000, step=5000)
+
+# EXPANDER 1 - Dados do Financiamento
 with st.sidebar.expander("Dados do Financiamento", expanded=True):
-    valor_entrada = st.sidebar.number_input("Valor da Entrada (R$)", min_value=0, value=60000, step=1000)
-    taxa_juros_anual_fin = st.sidebar.slider("Taxa de Juros do Financiamento Anual (%)", min_value=1.0, max_value=25.0, value=11.5, step=0.25) / 100
-    prazo_meses_fin = st.sidebar.slider("Prazo do Financiamento (meses)", min_value=12, max_value=420, value=360, step=12)
+    valor_bem = st.number_input("Valor do Bem (R$)", min_value=1000, value=300000, step=5000)
+    valor_entrada = st.number_input("Valor da Entrada (R$)", min_value=0, value=60000, step=1000)
+    taxa_juros_anual_fin = st.slider("Taxa de Juros do Financiamento Anual (%)", min_value=1.0, max_value=25.0, value=11.5, step=0.25) / 100
+    prazo_meses_fin = st.slider("Prazo do Financiamento (meses)", min_value=12, max_value=420, value=360, step=12)
+
+# EXPANDER 2 - Dados do Consórcio
 with st.sidebar.expander("Dados do Consórcio", expanded=True):
-    prazo_meses_con = st.sidebar.slider("Prazo do Grupo do Consórcio (meses)", min_value=12, max_value=240, value=180, step=12)
-    taxa_adm_total = st.sidebar.slider("Taxa de Administração Total (%)", min_value=5.0, max_value=30.0, value=18.0, step=0.5)
-    fundo_reserva_total = st.sidebar.slider("Fundo de Reserva Total (%)", min_value=0.0, max_value=5.0, value=1.0, step=0.25)
+    prazo_meses_con = st.slider("Prazo do Grupo do Consórcio (meses)", min_value=12, max_value=240, value=180, step=12)
+    taxa_adm_total = st.slider("Taxa de Administração Total (%)", min_value=5.0, max_value=30.0, value=18.0, step=0.5)
+    fundo_reserva_total = st.slider("Fundo de Reserva Total (%)", min_value=0.0, max_value=5.0, value=1.0, step=0.25)
 
 # --- Botão para Executar os Cálculos ---
 if st.sidebar.button("Analisar", type="primary", use_container_width=True):

@@ -1,4 +1,6 @@
 # Comparador Financeiro: Financiamento vs. Consórcio
+Allan Dayrell - 2022035563
+Lucas Araujo - 2022035962
 
 ## 1. Resumo do Projeto
 

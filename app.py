@@ -16,20 +16,26 @@ if 'analysis_run' not in st.session_state:
     st.session_state.analysis_run = False
     st.session_state.params = {}
 
+if 'selic_value' not in st.session_state:
+    selic_atual = busca_taxa_selic_atual()
+    st.session_state.selic_value = selic_atual * 100
+
 # --- Barra Lateral para Inputs do Usuário ---
 st.sidebar.header("Parâmetros de Entrada")
 
-# PARÂMETRO GLOBAL - Taxa de Oportunidade (Selic)
+# PARÂMETRO GLOBAL 1 - Taxa de Oportunidade (Selic)
 selic_atual = busca_taxa_selic_atual()
 taxa_selic_anual = st.sidebar.slider(
     "Taxa de Oportunidade (Selic Anual %)", 
-    min_value=1.0, max_value=20.0, value=selic_atual * 100, step=0.25
+    min_value=1.0, max_value=20.0, value=st.session_state.selic_value, step=0.25
 ) / 100
-st.sidebar.caption(f"Taxa Selic Meta atual detectada: {selic_atual*100:.2f}% a.a.")
+st.session_state.selic_value = taxa_selic_anual * 100
+
+# PARÂMETRO GLOBAL 2 - Valor do Bem
+valor_bem = st.sidebar.number_input("Valor do Bem (R$)", min_value=1000, value=300000, step=5000)
 
 # EXPANDER 1 - Dados do Financiamento
 with st.sidebar.expander("Dados do Financiamento", expanded=True):
-    valor_bem = st.number_input("Valor do Bem (R$)", min_value=1000, value=300000, step=5000)
     valor_entrada = st.number_input("Valor da Entrada (R$)", min_value=0, value=60000, step=1000)
     taxa_juros_anual_fin = st.slider("Taxa de Juros do Financiamento Anual (%)", min_value=1.0, max_value=25.0, value=11.5, step=0.25) / 100
     prazo_meses_fin = st.slider("Prazo do Financiamento (meses)", min_value=12, max_value=420, value=360, step=12)
